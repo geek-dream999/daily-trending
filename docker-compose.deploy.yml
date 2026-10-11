@@ -1,7 +1,7 @@
 services:
   web:
     image: daily-trending:${RELEASE_TAG:-test}
-    container_name: daily-trending-web
+    container_name: daily-trending-web-${RELEASE_TAG:-test}
     build:
       context: .
       args:
