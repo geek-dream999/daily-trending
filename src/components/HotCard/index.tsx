@@ -19,6 +19,7 @@ import BlurFade from '@/components/BlurFade'
 import SkeletonCard from '@/components/SkeletonCard'
 import { API_CACHE_SECONDS, RESPONSE } from '@/config/response'
 import { useRequest } from '@/hooks/use-request'
+import { appPath } from '@/lib/app-path'
 import { smoothScrollTo } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -50,7 +51,7 @@ function HotCard({ value, label, tip, prefix, suffix }: HotListConfig) {
 
   const { data, loading, error, run } = useRequest(
     async () => {
-      const url = bypassCacheRef.current ? `/api/${value}?t=${Date.now()}` : `/api/${value}`
+      const url = appPath(bypassCacheRef.current ? `/api/${value}?t=${Date.now()}` : `/api/${value}`)
 
       // 一次性消费标记
       bypassCacheRef.current = false
@@ -162,7 +163,7 @@ function HotCard({ value, label, tip, prefix, suffix }: HotListConfig) {
             alt={`${label}${tip}`}
             className="rounded-md shrink-0"
             height={24}
-            src={`/images/${value}.svg`}
+            src={appPath(`/images/${value}.svg`)}
             width={24}
           />
           <Label className="font-bold">{label}</Label>

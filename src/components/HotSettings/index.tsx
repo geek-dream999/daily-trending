@@ -28,6 +28,7 @@ import { useMemo } from 'react'
 
 import { Sortable, SortableItem, SortableItemHandle } from '@/components/Sortable'
 import { getCategoryValues, getOrderedCategories, HOT_CATEGORY_LIST, HOT_ITEMS } from '@/config/hot-list'
+import { appPath } from '@/lib/app-path'
 import { useAppStore } from '@/store/useAppStore'
 
 const MotionSurface = motion.create(Surface)
@@ -168,7 +169,7 @@ export default function HotSettings() {
                                 alt={raw.label}
                                 className="rounded-md shrink-0"
                                 height={16}
-                                src={`/images/${value}.svg`}
+                                src={appPath(`/images/${value}.svg`)}
                                 width={16}
                               />
                               <Label className="flex-1 text-xs truncate">{raw.label}</Label>
@@ -291,7 +292,7 @@ export default function HotSettings() {
                                       alt={raw.label}
                                       className="rounded-md shrink-0"
                                       height={16}
-                                      src={`/images/${value}.svg`}
+                                      src={appPath(`/images/${value}.svg`)}
                                       width={16}
                                     />
                                     <Label className="flex-1 text-xs truncate">{raw.label}</Label>

@@ -41,11 +41,13 @@ async function fetchWithDefaults(url: string, init: RequestInitLike): Promise<Re
 
   return fetch(url, {
     ...restInit,
-    ...(cache ? { cache } : {}),
-    // 默认 revalidate 缓存；调用方显式传 cache / next 时尊重调用方
-    ...(next ?? (cache ? {} : { next: { revalidate: API_CACHE_SECONDS } })),
-    // 手动刷新优先级最高：no-store 不读写数据缓存，保证回源拿最新
-    ...(refresh ? { cache: 'no-store' as RequestCache } : {}),
+    // Manual refresh must not send a conflicting revalidation policy.
+    ...(refresh
+      ? { cache: 'no-store' as RequestCache }
+      : {
+          ...(cache ? { cache } : {}),
+          ...(next ? { next } : cache ? {} : { next: { revalidate: API_CACHE_SECONDS } }),
+        }),
     signal: signal ?? AbortSignal.timeout(REQUEST_TIMEOUT),
     headers: buildHeaders(headers),
   })

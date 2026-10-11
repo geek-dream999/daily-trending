@@ -6,15 +6,15 @@
  * @Description: 顶部布局
  */
 'use client'
-import { HouseFill, LogoGithub } from '@gravity-ui/icons'
-import { Button, Description, Tooltip } from '@heroui/react'
+import { House, LogoGithub } from '@gravity-ui/icons'
+import { Description } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 
 import HotSearch from '@/components/HotSearch'
 import ThemeSwitcher from '@/components/ThemeSwitcher'
 import TimeAndLunar from '@/components/TimeAndLunar'
-import pkg from '#/package.json'
+import { appPath } from '@/lib/app-path'
 
 // Vercel 最佳实践：HotSettings 含 @dnd-kit 等重依赖，动态导入避免进入首屏 bundle
 const HotSettings = dynamic(() => import('@/components/HotSettings'))
@@ -24,7 +24,7 @@ export default function Header() {
     <div className="shrink-0 sticky top-0 z-20 backdrop-blur-sm p-4 container mx-auto grid grid-cols-2 sm:grid-cols-3 items-center">
       <div className="flex gap-2 items-center justify-self-start">
         <div className="size-9 relative">
-          <Image fill alt="Logo" src="/logo.svg" />
+          <Image fill alt="Logo" src={appPath('/logo.svg')} />
         </div>
         <div>
           <h1 className="font-black text-base">{process.env.NEXT_PUBLIC_APP_NAME}</h1>
@@ -42,38 +42,27 @@ export default function Header() {
 
         {/* 主题切换按钮 */}
         <ThemeSwitcher />
-        {/* Github */}
-        <Tooltip delay={0}>
-          <Button
-            isIconOnly
-            aria-label="Github"
-            size="sm"
-            variant="ghost"
-            onPress={() => window.open(`https://github.com/${pkg.author.name}/${pkg.name}`)}
-          >
-            <LogoGithub />
-          </Button>
-          <Tooltip.Content showArrow>
-            <Tooltip.Arrow />
-            Github
-          </Tooltip.Content>
-        </Tooltip>
-        {/* 主页 */}
-        <Tooltip delay={0}>
-          <Button
-            isIconOnly
-            aria-label="个人主页"
-            size="sm"
-            variant="ghost"
-            onPress={() => window.open(pkg.author.url)}
-          >
-            <HouseFill />
-          </Button>
-          <Tooltip.Content showArrow>
-            <Tooltip.Arrow />
-            个人主页
-          </Tooltip.Content>
-        </Tooltip>
+
+        <a
+          aria-label="个人 GitHub 仓库"
+          className="flex size-8 items-center justify-center rounded-lg hover:bg-default-100"
+          href="https://github.com/geek-dream999/daily-trending"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="GitHub 仓库"
+        >
+          <LogoGithub width={16} />
+        </a>
+        <a
+          aria-label="个人博客"
+          className="flex size-8 items-center justify-center rounded-lg hover:bg-default-100"
+          href="https://yahuihui.cn"
+          rel="noopener noreferrer"
+          target="_blank"
+          title="个人博客"
+        >
+          <House width={16} />
+        </a>
       </div>
     </div>
   )

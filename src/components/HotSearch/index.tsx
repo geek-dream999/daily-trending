@@ -12,6 +12,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 
 import { HOT_ITEMS } from '@/config/hot-list'
 import { API_CACHE_SECONDS } from '@/config/response'
+import { appPath } from '@/lib/app-path'
 import { formatNumber } from '@/lib/utils'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -187,7 +188,7 @@ function HotSearch() {
 
     const fetchList = async (value: HotValue) => {
       try {
-        const response = await fetch(`/api/${value}`, { signal: controller.signal })
+        const response = await fetch(appPath(`/api/${value}`), { signal: controller.signal })
         const result: IResponse = await response.json()
 
         if (controller.signal.aborted) return

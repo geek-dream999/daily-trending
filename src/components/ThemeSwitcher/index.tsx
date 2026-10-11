@@ -15,6 +15,8 @@ import { useTheme } from 'next-themes'
 import { useEffect, useRef } from 'react'
 import { ThemeAnimationType, useThemeAnimation } from 'theme-switch-animation/react'
 
+import { appPath } from '@/lib/app-path'
+
 const MotionMoon = motion.create(Moon)
 const MotionSun = motion.create(Sun)
 
@@ -31,7 +33,7 @@ const ThemeSwitcher: FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    audioRef.current = new Audio('/sounds/theme-toggle.mp3')
+    audioRef.current = new Audio(appPath('/sounds/theme-toggle.mp3'))
     audioRef.current.volume = 0.4
     audioRef.current.preload = 'auto'
     audioRef.current.load()
@@ -46,7 +48,7 @@ const ThemeSwitcher: FC = () => {
 
   const playSound = () => {
     if (!audioRef.current) {
-      audioRef.current = new Audio('/sounds/theme-toggle.mp3')
+      audioRef.current = new Audio(appPath('/sounds/theme-toggle.mp3'))
     }
     audioRef.current.currentTime = 0
     audioRef.current.play().catch((error) => {

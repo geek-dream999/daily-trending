@@ -1,0 +1,16 @@
+.git
+.next
+node_modules
+.env.*
+.private
+.agents
+.heroui-docs
+.DS_Store
+*.pem
+*.key
+*.tsbuildinfo
+coverage
+out
+build
+*.log
+next-env.d.ts

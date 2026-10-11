@@ -1,0 +1,19 @@
+services:
+  web:
+    image: daily-trending:${RELEASE_TAG:-test}
+    container_name: daily-trending-web
+    build:
+      context: .
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:24.18.1-bookworm-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7}
+        NEXT_PUBLIC_BASE_PATH: /daily-trending
+        NEXT_PUBLIC_APP_URL: https://test.wanniangqianxian.com/daily-trending
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${BIND_IP:-172.31.143.136}:${PORT:-3016}:3000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -12,6 +12,7 @@ import { Chip, cn, Description, Link, Separator } from '@heroui/react'
 import Image from 'next/image'
 import { useState } from 'react'
 
+import { appPath } from '@/lib/app-path'
 import pkg from '#/package.json'
 
 interface Social {
@@ -27,12 +28,12 @@ export default function Footer() {
   // 备案信息
   const IcpLinks: Social[] = [
     {
-      image: '/icp.png',
+      image: appPath('/icp.png'),
       url: 'https://beian.miit.gov.cn/#/Integrated/index',
       label: process.env.NEXT_PUBLIC_ICP!,
     },
     {
-      image: '/gongan.png',
+      image: appPath('/gongan.png'),
       url: 'https://beian.mps.gov.cn/#/query/webSearch',
       label: process.env.NEXT_PUBLIC_GONGAN!,
     },
@@ -43,7 +44,7 @@ export default function Footer() {
       <div className="flex items-center gap-3 justify-self-center sm:justify-self-start">
         <div className="flex items-center gap-2">
           <div className="size-5 relative">
-            <Image fill alt="Logo" src="/logo.svg" />
+            <Image fill alt="Logo" src={appPath('/logo.svg')} />
           </div>
           <span className="text-sm font-bold">{process.env.NEXT_PUBLIC_APP_NAME}</span>
         </div>
@@ -73,7 +74,7 @@ export default function Footer() {
         . All rights reserved.
       </Description>
       <div className="flex gap-2 items-center flex-col sm:flex-row justify-self-center sm:justify-self-end">
-        {IcpLinks.map(({ image, url, label }) => (
+        {IcpLinks.filter(({ label }) => label).map(({ image, url, label }) => (
           <Link key={url} className="flex gap-1 items-center no-underline" href={url} target="_blank">
             <Image alt={label} height={14} src={image!} width={14} />
             <Description className="hover:text-accent transition-colors">{label}</Description>

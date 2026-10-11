@@ -23,7 +23,7 @@ import MotionProvider from '@/components/MotionProvider'
 import { HOT_ITEMS } from '@/config/hot-list'
 import pkg from '#/package.json'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://hot.baiwumm.com'
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://hot.baiwumm.com').replace(/\/+$/, '')
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL), // 基础 URL,用于补全相对路径
@@ -36,12 +36,16 @@ export const metadata: Metadata = {
       url: pkg.author.url,
     },
   ],
-  verification: {
-    other: {
-      'baidu-site-verification': 'codeva-kYzuuOyYCZ',
-      'bytedance-verification-code': 'oPgCIrgBz/3Lhr9BoNE2',
-    },
-  }, // 网站验证
+  ...(process.env.NEXT_PUBLIC_ENABLE_SITE_VERIFICATION !== 'false'
+    ? {
+        verification: {
+          other: {
+            'baidu-site-verification': 'codeva-kYzuuOyYCZ',
+            'bytedance-verification-code': 'oPgCIrgBz/3Lhr9BoNE2',
+          },
+        },
+      }
+    : {}),
   keywords: HOT_ITEMS.items.map(({ raw }) => `${raw.label}${raw.tip}`), // 网站关键词
   openGraph: {
     type: 'website',
@@ -95,7 +99,7 @@ export default function RootLayout({
         <GoogleUtilities />
         <MicrosoftClarity />
         {/* Vercel Analytics */}
-        <Analytics />
+        {process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS !== 'false' && <Analytics />}
       </body>
     </html>
   )
