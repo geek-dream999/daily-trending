@@ -185,3 +185,26 @@ export const getCategoryValues = (sortItems: readonly HotValue[], category: HotC
  * @description: 常看分节的虚拟分类名（非 hotItemsConfig 中的分类，首页置顶分节与锚点导航共用）
  */
 export const FAVORITE_CATEGORY = '常看'
+
+/** 首页固定置顶的默认平台分组 */
+export const DEFAULT_ORDER_CATEGORY = '默认排序'
+export const DEFAULT_ORDER_VALUES: HotValue[] = [
+  'douyin',
+  'xiaohongshu',
+  'kuaishou',
+  'bilibili',
+  'weibo',
+  'toutiao',
+  'zhihu',
+  'baidutieba',
+]
+
+/** 归一化用户保存的默认排序，补齐新增平台并剔除重复或无效值 */
+export const getOrderedDefaultValues = (order: readonly HotValue[]): HotValue[] => {
+  const allowed = new Set(DEFAULT_ORDER_VALUES)
+  const valid = order.filter((value) => allowed.has(value))
+  const unique = [...new Set(valid)]
+  const present = new Set(unique)
+
+  return [...unique, ...DEFAULT_ORDER_VALUES.filter((value) => !present.has(value))]
+}

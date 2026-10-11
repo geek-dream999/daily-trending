@@ -27,7 +27,15 @@ import NumberFlow from '@number-flow/react'
 import { useMemo } from 'react'
 
 import { Sortable, SortableItem, SortableItemHandle } from '@/components/Sortable'
-import { getCategoryValues, getOrderedCategories, HOT_CATEGORY_LIST, HOT_ITEMS } from '@/config/hot-list'
+import {
+  DEFAULT_ORDER_CATEGORY,
+  DEFAULT_ORDER_VALUES,
+  getCategoryValues,
+  getOrderedCategories,
+  getOrderedDefaultValues,
+  HOT_CATEGORY_LIST,
+  HOT_ITEMS,
+} from '@/config/hot-list'
 import { appPath } from '@/lib/app-path'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -38,6 +46,8 @@ export default function HotSettings() {
   const setHiddenItems = useAppStore((state) => state.setHiddenItems)
   const sortItems = useAppStore((state) => state.sortItems)
   const setSortItems = useAppStore((state) => state.setSortItems)
+  const defaultOrder = useAppStore((state) => state.defaultOrder)
+  const setDefaultOrder = useAppStore((state) => state.setDefaultOrder)
   const categoryOrder = useAppStore((state) => state.categoryOrder)
   const setCategoryOrder = useAppStore((state) => state.setCategoryOrder)
   const favoriteItems = useAppStore((state) => state.favoriteItems)
@@ -46,30 +56,34 @@ export default function HotSettings() {
 
   // 分区块数据：分类顺序 × 块内平台顺序（读取时归一化，含隐藏平台——复选框要能对隐藏项反向勾选）
   const sections = useMemo(
-    () =>
-      getOrderedCategories(categoryOrder).map((category) => ({
+    () => [
+      { category: DEFAULT_ORDER_CATEGORY, values: getOrderedDefaultValues(defaultOrder), isDefault: true },
+      ...getOrderedCategories(categoryOrder).map((category) => ({
         category,
-        values: getCategoryValues(sortItems, category),
+        values: getCategoryValues(sortItems, category).filter((value) => !DEFAULT_ORDER_VALUES.includes(value)),
+        isDefault: false,
       })),
-    [categoryOrder, sortItems],
+    ],
+    [categoryOrder, sortItems, defaultOrder],
   )
 
   /** 分类层 ↑/↓：与相邻分类交换位置 */
   const moveCategory = (category: HotCategory, direction: -1 | 1) => {
-    const index = sections.findIndex((section) => section.category === category)
+    const categorySections = sections.filter((section) => !section.isDefault)
+    const index = categorySections.findIndex((section) => section.category === category)
     const target = index + direction
 
-    if (index < 0 || target < 0 || target >= sections.length) return
+    if (index < 0 || target < 0 || target >= categorySections.length) return
 
-    const next = [...sections]
+    const next = [...categorySections]
 
     ;[next[index], next[target]] = [next[target], next[index]]
-    setCategoryOrder(next.map(({ category: value }) => value))
+    setCategoryOrder(next.map(({ category: value }) => value as HotCategory))
   }
 
   /** 分类层显隐：勾选 = 清空该分类所有平台的隐藏标记；取消 = 全部隐藏（hiddenItems 单一数据源） */
-  const toggleCategory = (category: HotCategory, checked: boolean) => {
-    const members = new Set(getCategoryValues(sortItems, category))
+  const toggleCategory = (membersList: readonly HotValue[], checked: boolean) => {
+    const members = new Set(membersList)
 
     setHiddenItems(
       checked
@@ -80,8 +94,18 @@ export default function HotSettings() {
   }
 
   /** 平台层：分类内拖拽排序（平台不可跨分类，重写扁平顺序时其他分类块保持原样） */
-  const reorderPlatforms = (category: HotCategory, nextMembers: HotValue[]) => {
-    setSortItems(sections.flatMap((section) => (section.category === category ? nextMembers : section.values)))
+  const reorderPlatforms = (category: string, nextMembers: HotValue[]) => {
+    if (category === DEFAULT_ORDER_CATEGORY) {
+      setDefaultOrder(nextMembers)
+
+      return
+    }
+
+    setSortItems(
+      sections
+        .filter((section) => !section.isDefault)
+        .flatMap((section) => (section.category === category ? nextMembers : section.values)),
+    )
   }
 
   /** 平台层显隐 */
@@ -93,6 +117,7 @@ export default function HotSettings() {
   const resetConfig = () => {
     setCategoryOrder([...HOT_CATEGORY_LIST])
     setSortItems(HOT_ITEMS.values)
+    setDefaultOrder([...DEFAULT_ORDER_VALUES])
     setHiddenItems([])
     setFavoriteItems([])
     toast.success('操作成功！', {
@@ -195,7 +220,10 @@ export default function HotSettings() {
                   </Typography>
                 )}
               </Surface>
-              {sections.map(({ category, values }, index) => {
+              {sections.map(({ category, values, isDefault }) => {
+                const categoryIndex = sections
+                  .filter((section) => !section.isDefault)
+                  .findIndex((section) => section.category === category)
                 const hiddenCount = values.filter((value) => hiddenItems.includes(value)).length
                 const allHidden = hiddenCount === values.length
                 const someHidden = hiddenCount > 0 && !allHidden
@@ -216,7 +244,7 @@ export default function HotSettings() {
                         isIndeterminate={someHidden}
                         isSelected={!allHidden}
                         variant="secondary"
-                        onChange={(checked) => toggleCategory(category, checked)}
+                        onChange={(checked) => toggleCategory(values, checked)}
                       >
                         <Checkbox.Content className="flex items-center gap-2">
                           <Checkbox.Control className="size-4">
@@ -225,30 +253,32 @@ export default function HotSettings() {
                           <h2 className="font-black">{category}</h2>
                         </Checkbox.Content>
                       </Checkbox>
-                      <div className="flex gap-0.5">
-                        <Button
-                          isIconOnly
-                          aria-label={`上移分类：${category}`}
-                          className="text-muted size-6 min-w-6"
-                          isDisabled={index === 0}
-                          size="sm"
-                          variant="ghost"
-                          onPress={() => moveCategory(category, -1)}
-                        >
-                          <ArrowUp />
-                        </Button>
-                        <Button
-                          isIconOnly
-                          aria-label={`下移分类：${category}`}
-                          className="text-muted size-6 min-w-6"
-                          isDisabled={index === sections.length - 1}
-                          size="sm"
-                          variant="ghost"
-                          onPress={() => moveCategory(category, 1)}
-                        >
-                          <ArrowDown />
-                        </Button>
-                      </div>
+                      {!isDefault && (
+                        <div className="flex gap-0.5">
+                          <Button
+                            isIconOnly
+                            aria-label={`上移分类：${category}`}
+                            className="text-muted size-6 min-w-6"
+                            isDisabled={categoryIndex === 0}
+                            size="sm"
+                            variant="ghost"
+                            onPress={() => moveCategory(category as HotCategory, -1)}
+                          >
+                            <ArrowUp />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            aria-label={`下移分类：${category}`}
+                            className="text-muted size-6 min-w-6"
+                            isDisabled={categoryIndex === sections.filter((section) => !section.isDefault).length - 1}
+                            size="sm"
+                            variant="ghost"
+                            onPress={() => moveCategory(category as HotCategory, 1)}
+                          >
+                            <ArrowDown />
+                          </Button>
+                        </div>
+                      )}
                       <Typography className="ml-auto" color="muted" type="body-sm">
                         <NumberFlow value={values.length - hiddenCount} />/{values.length}
                       </Typography>

@@ -18,7 +18,10 @@ import SkeletonCard from '@/components/SkeletonCard'
 import {
   getCategoryValues,
   getOrderedCategories,
+  getOrderedDefaultValues,
   CATEGORY_GROUPS,
+  DEFAULT_ORDER_CATEGORY,
+  DEFAULT_ORDER_VALUES,
   FAVORITE_CATEGORY,
   HOT_ITEMS,
 } from '@/config/hot-list'
@@ -31,7 +34,13 @@ const gridClassName = 'grid gap-4 grid-cols-[repeat(auto-fill,minmax(20rem,1fr))
 function SkeletonSections() {
   return (
     <div className="space-y-10">
-      {CATEGORY_GROUPS.map(({ category, values }) => (
+      {[
+        { category: DEFAULT_ORDER_CATEGORY, values: DEFAULT_ORDER_VALUES },
+        ...CATEGORY_GROUPS.map((group) => ({
+          ...group,
+          values: group.values.filter((value) => !DEFAULT_ORDER_VALUES.includes(value)),
+        })),
+      ].map(({ category, values }) => (
         <div key={category} className="flex flex-col gap-3">
           <Skeleton className="h-5 w-24 rounded-md" />
           <div className={gridClassName}>
@@ -71,6 +80,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
   const hiddenItems = useAppStore((state) => state.hiddenItems)
   const sortItems = useAppStore((state) => state.sortItems)
+  const defaultOrder = useAppStore((state) => state.defaultOrder)
   const categoryOrder = useAppStore((state) => state.categoryOrder)
   const favoriteItems = useAppStore((state) => state.favoriteItems)
 
@@ -79,18 +89,26 @@ export default function Home() {
   const sections = useMemo(() => {
     const hiddenSet = new Set(hiddenItems ?? [])
     const favSet = new Set(favoriteItems)
-    const favorites = favoriteItems.filter((value) => !hiddenSet.has(value) && HOT_ITEMS.raw(value))
+    const defaultSet = new Set(DEFAULT_ORDER_VALUES)
+    const defaults = getOrderedDefaultValues(defaultOrder).filter((value) => !hiddenSet.has(value))
+    const favorites = favoriteItems.filter(
+      (value) => !defaultSet.has(value) && !hiddenSet.has(value) && HOT_ITEMS.raw(value),
+    )
     const categorySections = getOrderedCategories(categoryOrder)
       .map((category) => ({
         category,
-        values: getCategoryValues(sortItems, category).filter((value) => !hiddenSet.has(value) && !favSet.has(value)),
+        values: getCategoryValues(sortItems, category).filter(
+          (value) => !defaultSet.has(value) && !hiddenSet.has(value) && !favSet.has(value),
+        ),
       }))
       .filter(({ values }) => values.length > 0)
 
-    return favorites.length
-      ? [{ category: FAVORITE_CATEGORY, values: favorites }, ...categorySections]
-      : categorySections
-  }, [categoryOrder, sortItems, hiddenItems, favoriteItems])
+    return [
+      ...(defaults.length ? [{ category: DEFAULT_ORDER_CATEGORY, values: defaults }] : []),
+      ...(favorites.length ? [{ category: FAVORITE_CATEGORY, values: favorites }] : []),
+      ...categorySections,
+    ]
+  }, [categoryOrder, sortItems, defaultOrder, hiddenItems, favoriteItems])
 
   useEffect(() => {
     const timer = setTimeout(setMounted, 0, true)

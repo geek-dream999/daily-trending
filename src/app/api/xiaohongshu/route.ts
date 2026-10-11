@@ -34,8 +34,8 @@ export async function GET(request: Request) {
     })
 
     // 处理数据
-    if (responseBody.success) {
-      const result: HotListItem[] = responseBody.data?.items.map((v: any) => {
+    if (responseBody.success && Array.isArray(responseBody.data?.items) && responseBody.data.items.length > 0) {
+      const result: HotListItem[] = responseBody.data.items.map((v: any) => {
         return {
           id: v.id,
           title: v.title,
@@ -49,7 +49,9 @@ export async function GET(request: Request) {
       return successResponse(result)
     }
 
-    return successResponse()
+    console.warn(`小红书上游未返回榜单数据（code=${responseBody.code ?? 'unknown'}）`)
+
+    return errorResponse()
   } catch (error) {
     console.error('上游请求失败：', error)
 
